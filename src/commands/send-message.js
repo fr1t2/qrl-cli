@@ -274,13 +274,13 @@ SendMessage.flags = {
   testnet: flags.boolean({
     char: 't',
     default: false,
-    description: 'queries testnet for the OTS state'
+    description: 'queries testnet to send the message'
   }),
 
   mainnet: flags.boolean({
     char: 'm',
     default: false,
-    description: 'queries mainnet for the OTS state'
+    description: 'queries mainnet to send the message'
   }),
 
   grpc: flags.string({
@@ -316,7 +316,7 @@ SendMessage.flags = {
   recipient: flags.string({
     char: 'r',
     required: false,
-    description: 'QRL address of recipient'
+    description: '(optional) QRL address of recipient'
   }),
 
   fee: flags.string({
