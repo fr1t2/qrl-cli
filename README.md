@@ -375,11 +375,11 @@ OPTIONS
   -f, --fee=fee              QRL (f)ee for transaction in Shor (defaults to 100 Shor)
   -g, --grpc=grpc            advanced: grpc endpoint (for devnet/custom QRL network deployments)
   -i, --otsindex=otsindex    Unused OTS key (i)ndex for message transaction
-  -m, --mainnet              queries mainnet for the OTS state
+  -m, --mainnet              queries mainnet to send the message
   -p, --password=password    Encrypted QRL wallet file (p)assword
-  -r, --recipient=recipient  QRL address of recipient
+  -r, --recipient=recipient  (optional) QRL address of recipient
   -s, --hexseed=hexseed      Secret hex(s)eed/mnemonic of address message should be sent from
-  -t, --testnet              queries testnet for the OTS state
+  -t, --testnet              queries testnet to send the message
   -w, --wallet=wallet        JSON (w)allet file message will be sent from
 
 DESCRIPTION
