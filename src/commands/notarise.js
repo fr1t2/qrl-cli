@@ -15,7 +15,7 @@ const CryptoJS = require("crypto-js");
 
 const Qrlnode = require('../functions/grpc')
 
-const Hash = require('../functions/hash.js')
+// const Hash = require('../functions/hash.js')
 
 let QRLLIBLoaded = false
 
