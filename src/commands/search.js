@@ -120,7 +120,6 @@ this.log(`searchstring: ${searchString}`)
       const response = await Qrlnetwork.api('GetObject', {
         query: Buffer.from(searchString, 'hex')
       })
-spinner.succeed(`response: ${JSON.stringify(response)}`)      
       if (response.found === false) {
         spinner.fail('Unable to find transaction')
         this.exit(1)
