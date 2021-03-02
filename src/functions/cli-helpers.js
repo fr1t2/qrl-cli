@@ -13,8 +13,9 @@ const shorPerQuanta = 10 ** 9
 // network settings
 // set with grpcEndpoint = clihelpers.testnetNode.toString()
 const mainnetNode = 'mainnet-1.automated.theqrl.org:19009'
-// const testnetNode = 'testnet-1.automated.theqrl.org:19009'
-const testnetNode = '10.10.10.21:19010'
+// const mainnetNode = '10.10.10.21:19009'
+const testnetNode = 'testnet-1.automated.theqrl.org:19009'
+// const testnetNode = '10.10.10.21:19010'
 
 // qrllib
 let DILLIBLoaded = false
