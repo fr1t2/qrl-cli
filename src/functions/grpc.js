@@ -169,6 +169,7 @@ class QrlNode {
 
   api(apiCall, request = {}) {
       return new Promise((resolve, reject) => {
+console.log(`\nrequest ${JSON.stringify(request)}`)
         let { client } = this
         if (this.connection === false) {
           client = this.connect()
