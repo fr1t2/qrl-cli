@@ -3,34 +3,6 @@
 /* global QRLLIB */
 /* global DILLIB */
 /* global KYBLIB */
-/*
-This command will run 2 functions overall
-  Case #1. Alice generates a new enc_shared_key_file and enc_secret + keylist for Bob's public lattice keys given through tx_id, Pub_Lattice_keys JSON or Pub_Lattice_Keys_file
-  Case #2. Bob, Given Alice's cyphertext and enc_secret will DECRYPT the keys using his kyber SK and generate the same keylist Alice has using the private keys that match the tx_id Alice used
-
-  case #1 
-    requirements -
-      - Alice's Local secret lattice_keys - either:
-        - lattice_keyfile
-        - kyberSK, dilithiumSK, ecdsaSK (hex)
-      - Bob's lattice keys - either:
-        - tx_id from users lattice_tx
-        - local recipient_lattice_PUB
-    generates -
-      - kyber encrypted shared_key using recipients pub lattice key and local lattice secret key
-      - encrypted cyphertext (shared_secret) encrypted with the new shared_key
-      - key_list from generated from the new shared_secret, ran through shake128 (or any hashing function) (optional password protected)
-
-  case #2 
-    requirements -
-      - Alice shares the shared_key encrypted with Bob's PUB_kyber_key and Alice's SEC_Kyber_Key from output of (case #1 output b) and the shared_secret encrypted with shared_key from other user (case #1 output a)
-      - Bob's secret lattice keys associated to PUB_kyber_key and TXhash Alice used to decrypt either:
-        - key file 
-        - json keys passed through flag
-    generates -
-      - Alice's decrypted shared key is used to further decrypt the shared_secret which is used to generate the shared_keylist
-      - generates the same shared key_list from shared_secret ran through shake128 (or the same hashing function that was used to generate the initial list) (optional password protected)
-*/
 
 // ///////////////////////// 
 // CONST AND FUNCTIONS  
@@ -51,10 +23,9 @@ const Crypto = require('crypto')
 const eccrypto = require('eccrypto')
 const aesjs = require('aes-js')
 const Qrlnode = require('../functions/grpc')
+const clihelpers = require('../functions/cli-helpers')
 
-let KYBLIBLoaded = false
-let DILLIBLoaded = false
-let QRLLIBLoaded = false
+
 let cypherText = 'cypherText.txt'
 let signedMessage = 'signedMessage.txt'
 let sharedKeyListFile = 'sharedKeyList.txt'
@@ -62,63 +33,6 @@ let sharedKeyListFile = 'sharedKeyList.txt'
 const openEphemeralFile = function oEF(path) {
   const contents = fs.readFileSync(path)
   return JSON.parse(contents)[0]
-}
-
-const waitForQRLLIB = (callBack) => {
-  setTimeout(() => {
-    // Test the QRLLIB object has the str2bin function.
-    // This is sufficient to tell us QRLLIB has loaded.
-    if (typeof QRLLIB.str2bin === 'function' && QRLLIBLoaded === true) {
-      callBack()
-    } else {
-      QRLLIBLoaded = true
-      return waitForQRLLIB(callBack)
-    }
-    return false
-  }, 50)
-}
-const waitForKYBLIB = callBack => {
-  setTimeout(() => {
-    // Test the KYBLIB object has the getString function.
-    // This is sufficient to tell us KYBLIB has loaded.
-    if (typeof KYBLIB.getString === 'function' && KYBLIBLoaded === true) {
-      callBack()
-    } else {
-      KYBLIBLoaded = true
-          return waitForKYBLIB(callBack)
-    }
-    return false
-  }, 50)
-}
-
-const waitForDILLIB = callBack => {
-  setTimeout(() => {
-    // Test the DILLIB object has the getString function.
-    // This is sufficient to tell us DILLIB has loaded.
-    if (typeof DILLIB.getString === 'function' && DILLIBLoaded === true) {
-      callBack()
-    } else {
-      DILLIBLoaded = true
-      return waitForDILLIB(callBack)
-    }
-    return false
-  }, 50)
-}
-
-// Convert bytes to hex
-function bytesToHex(byteArray) {
-  return [...byteArray]
-    /* eslint-disable */
-    .map((byte) => {
-      return ('00' + (byte & 0xff).toString(16)).slice(-2)
-    })
-    /* eslint-enable */
-    .join('')
-}
-
-const openFile = (path) => {
-  const contents = fs.readFileSync(path)
-  return JSON.parse(contents)
 }
 
 const checkCipherTextJson = (checkCipher) => {
@@ -158,7 +72,6 @@ const checkCipherTextJson = (checkCipher) => {
   }
   return valid
 }
-
 
 const checkSignedMessageJson = (signedMessage) => {
   const valid = {}
@@ -266,18 +179,6 @@ const checkLatticeJSON = (check) => {
   return valid
 }
 
-// check if file is empty
-function isFileEmpty(fileName, ignoreWhitespace=true) {
-  return new Promise((resolve, reject) => {
-    fs.readFile(fileName, (err, data) => {
-      if( err ) {
-        reject(err);
-        return;
-      }
-      resolve((!ignoreWhitespace && data.length === 0) || (ignoreWhitespace && !!String(data).match(/^\s*$/)))
-    });
-  })
-}
 
 class LatticeShared extends Command {
   async run() {
@@ -295,7 +196,7 @@ class LatticeShared extends Command {
 // /////////////////////////
 // network stuff
 // /////////////////////////
-    let grpcEndpoint = 'mainnet-1.automated.theqrl.org:19009'
+    let grpcEndpoint = clihelpers.mainnetNode.toString()
     let network = 'Mainnet'
 
     if (flags.grpc) {
@@ -303,11 +204,11 @@ class LatticeShared extends Command {
       network = `Custom GRPC endpoint: [${flags.grpc}]`
     }
     if (flags.testnet) {
-      grpcEndpoint = 'testnet-1.automated.theqrl.org:19009'
+      grpcEndpoint = clihelpers.testnetNode.toString()
       network = 'Testnet'
     }
     if (flags.mainnet) {
-      grpcEndpoint = 'mainnet-1.automated.theqrl.org:19009'
+      grpcEndpoint = clihelpers.mainnetNode.toString()
       network = 'Mainnet'
     }
     this.log(`Generate Lattice Shared_Keys...`)
@@ -330,14 +231,14 @@ class LatticeShared extends Command {
       // check if the secret keys are a file or json
       if (fs.existsSync(args.latticeSK)) {
         // file submitted, is file empty?
-        isFileEmpty(args.latticeSK).then( (isEmpty) => {
+        clihelpers.isFileEmpty(args.latticeSK).then( (isEmpty) => {
           if (isEmpty) {
             spinner.fail('Ciphertext File is empty...')
             this.exit(1)
           }
         })
         try{
-          latticeSK = openFile(args.latticeSK)
+          latticeSK = clihelpers.openFile(args.latticeSK)
         }
         catch (e) {
           spinner.fail('Unable to open file...')
@@ -442,7 +343,7 @@ class LatticeShared extends Command {
         // check if the public keys are a file or json
         if (fs.existsSync(args.latticePK)) {
           // file submitted
-          latticePK = openFile(args.latticePK)
+          latticePK = clihelpers.openFile(args.latticePK)
           // check lattice file for valid json
         }
         // is a hexseed
@@ -463,16 +364,16 @@ class LatticeShared extends Command {
               spinner.fail('No lattice transaction found...')
               this.exit(1)
             }
-            pubKeyAddress = `Q${bytesToHex(response.transaction.addr_from)}`
+            pubKeyAddress = `Q${clihelpers.bytesToHex(response.transaction.addr_from)}`
             latticePK = [{
               address: pubKeyAddress,
               network,
             }]
             latticePK.push({ 
-              pk1: bytesToHex(response.transaction.tx.latticePK.pk1),
-              pk2: bytesToHex(response.transaction.tx.latticePK.pk2),
-              pk3: bytesToHex(response.transaction.tx.latticePK.pk3),
-              txHash: bytesToHex(response.transaction.tx.transaction_hash),
+              pk1: clihelpers.bytesToHex(response.transaction.tx.latticePK.pk1),
+              pk2: clihelpers.bytesToHex(response.transaction.tx.latticePK.pk2),
+              pk3: clihelpers.bytesToHex(response.transaction.tx.latticePK.pk3),
+              txHash: clihelpers.bytesToHex(response.transaction.tx.transaction_hash),
             })
           }
         }
@@ -511,8 +412,8 @@ class LatticeShared extends Command {
       const bobKyberPK = latticePK[pubKeyIndexNum].pk1
       const bobECDSAPK = latticePK[pubKeyIndexNum].pk3
 
-      waitForKYBLIB(async () => {
-        waitForDILLIB(async () => {
+      clihelpers.waitForKYBLIB(async () => {
+        clihelpers.waitForDILLIB(async () => {
           spinner.succeed(`Generating new shared secrets for`)
           spinner.succeed(`Address: ${latticePK[0].address}`)
           spinner.succeed(`Lattice Tx Hash: ${latticePK[pubKeyIndexNum].txHash}`)
@@ -550,7 +451,7 @@ class LatticeShared extends Command {
             
             spinner.succeed(`Signed Message File file written to: ${signedMessage}`)
             // 9 - Generate the next 1000 keys with Shake128 and shared secret seed
-            waitForQRLLIB(async () => {
+            clihelpers.waitForQRLLIB(async () => {
               const sBin = QRLLIB.hstr2bin(Buffer.from(Buffer.from(seed).toString('hex')))
               let keylist = QRLLIB.shake128(64000, sBin)
               if (flags.encryptPassword) {
@@ -592,7 +493,7 @@ class LatticeShared extends Command {
       if (fs.existsSync(args.cypherText)) {
         // is file empty?
 // spinner.succeed('is the file empty? ')
-        isFileEmpty(args.cypherText).then( (isEmpty) => {
+        clihelpers.isFileEmpty(args.cypherText).then( (isEmpty) => {
           if (isEmpty) {
             spinner.fail('Ciphertext File is empty...')
             this.exit(1)
@@ -626,7 +527,7 @@ class LatticeShared extends Command {
       // is signedMessage a file?
       if (fs.existsSync(args.signedMessage)) {
         // is file empty?
-        isFileEmpty(args.signedMessage).then( (isEmpty) => {
+        clihelpers.isFileEmpty(args.signedMessage).then( (isEmpty) => {
           if (isEmpty) {
             spinner.fail('signedMessage File is empty...')
             this.exit(1)
@@ -658,8 +559,8 @@ class LatticeShared extends Command {
 
       spinner.succeed('Shared secrets found, decrypting and generating shared keylist')
       // Generate keys from found list using secret key and pub key from sender
-      waitForKYBLIB(async () => {
-        waitForDILLIB(async () => {
+      clihelpers.waitForKYBLIB(async () => {
+        clihelpers.waitForDILLIB(async () => {
           try {
             encCypherText = encCypherTextJson
             signedMsg = signedMsgJson
@@ -693,7 +594,7 @@ class LatticeShared extends Command {
             const sDecrypted = aesCtr.decrypt(encryptedBytes)
             // Bob now has access to the seed s and the shared key sent from Alice
             // 6 - Generate the next 1000 keys with Shake, creating the same keylist as Alice has
-            waitForQRLLIB(async () => {
+            clihelpers.waitForQRLLIB(async () => {
               const sBin = QRLLIB.hstr2bin(Buffer.from(Buffer.from(sDecrypted).toString('hex')))
               const keyList = QRLLIB.shake128(64000, sBin)
               fs.writeFileSync(sharedKeyListFile, QRLLIB.bin2hstr(keyList))

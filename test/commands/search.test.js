@@ -89,7 +89,7 @@ describe('search #5', () => {
     'search',
     'ce14f14564be176a62794088bab55a095ac82fdfa0f390fe6e8df6d2f200b2e9',
     '-g',
-    'testnet-1.automated.theqrl.org:19009',
+    '10.10.10.21:19010',
   ]
   let exitCode
   before(done => {
