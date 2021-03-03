@@ -37,6 +37,7 @@ USAGE
 * [`qrl-cli generate-shared-keys LATTICEPK LATTICESK [CYPHERTEXT] [SIGNEDMESSAGE]`](#qrl-cli-generate-shared-keys-latticepk-latticesk-cyphertext-signedmessage)
 * [`qrl-cli get-keys`](#qrl-cli-get-keys)
 * [`qrl-cli help [COMMAND]`](#qrl-cli-help-command)
+* [`qrl-cli notarise NOTARIALDATA`](#qrl-cli-notarise-notarialdata)
 * [`qrl-cli ots ADDRESS`](#qrl-cli-ots-address)
 * [`qrl-cli receive ADDRESS`](#qrl-cli-receive-address)
 * [`qrl-cli search SEARCH`](#qrl-cli-search-search)
@@ -226,6 +227,37 @@ OPTIONS
 
 _See code: [@oclif/plugin-help](https://github.com/oclif/plugin-help/blob/v2.2.3/src/commands/help.ts)_
 
+## `qrl-cli notarise NOTARIALDATA`
+
+Notarise a document or file on the blockchain
+
+```
+USAGE
+  $ qrl-cli notarise NOTARIALDATA
+
+ARGUMENTS
+  NOTARIALDATA  Data (file) to notarise
+
+OPTIONS
+  -M, --message=message    Additional (M)essage data to send (max 45 char)
+  -f, --fee=fee            QRL (f)ee for transaction in Shor (defaults to 0 Shor)
+  -g, --grpc=grpc          advanced: grpc endpoint (for devnet/custom QRL network deployments)
+  -h, --hexseed=hexseed    Secret (h)exseed/mnemonic of address notarisation should be sent from
+  -i, --otsindex=otsindex  Unused OTS key (i)ndex for message transaction
+  -m, --mainnet            uses mainnet for the notarisation
+  -p, --password=password  Encrypted QRL wallet file (p)assword
+  -t, --testnet            uses testnet for the notarisation
+  -w, --wallet=wallet      JSON (w)allet file notarisation will be sent from
+
+DESCRIPTION
+  Notarise data onto the blockchain. Hashes any given file and submits to the network using any address
+  given.
+
+  Advanced: you can use a custom defined node to broadcast the notarisation. Use the (-g) grpc endpoint.
+```
+
+_See code: [src/commands/notarise.js](https://github.com/theqrl/qrl-cli/blob/v1.8.0/src/commands/notarise.js)_
+
 ## `qrl-cli ots ADDRESS`
 
 Get a address's OTS state from the network
@@ -343,11 +375,11 @@ OPTIONS
   -f, --fee=fee              QRL (f)ee for transaction in Shor (defaults to 100 Shor)
   -g, --grpc=grpc            advanced: grpc endpoint (for devnet/custom QRL network deployments)
   -i, --otsindex=otsindex    Unused OTS key (i)ndex for message transaction
-  -m, --mainnet              queries mainnet for the OTS state
+  -m, --mainnet              queries mainnet to send the message
   -p, --password=password    Encrypted QRL wallet file (p)assword
-  -r, --recipient=recipient  QRL address of recipient
+  -r, --recipient=recipient  (optional) QRL address of recipient
   -s, --hexseed=hexseed      Secret hex(s)eed/mnemonic of address message should be sent from
-  -t, --testnet              queries testnet for the OTS state
+  -t, --testnet              queries testnet to send the message
   -w, --wallet=wallet        JSON (w)allet file message will be sent from
 
 DESCRIPTION
