@@ -35,6 +35,10 @@ class SendMessage extends Command {
       this.log(`${red('⨉')} No message given`)
       this.exit(1)
     }
+
+// QRL Message transaction encoding flag
+
+
     // check size of message MAX 80 bytes
     const messageBytes = clihelpers.string2Bin(flags.message)
     const messageLength = clihelpers.byteCount(messageBytes)

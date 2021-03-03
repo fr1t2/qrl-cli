@@ -16,6 +16,7 @@ const mainnetNode = 'mainnet-1.automated.theqrl.org:19009'
 // const mainnetNode = '10.10.10.21:19009'
 const testnetNode = 'testnet-1.automated.theqrl.org:19009'
 // const testnetNode = '10.10.10.21:19010'
+// const testnetNode = 'devnet-1.automated.theqrl.org:19009' //devner
 
 // qrllib
 let DILLIBLoaded = false
@@ -193,6 +194,16 @@ function isFileEmpty(fileName, ignoreWhitespace=true) {
   })
 }
 
+function stringToBytes(str) {
+  const result = [];
+  /* eslint no-plusplus: ["error", { "allowForLoopAfterthoughts": true }] */
+  for (let i = 0; i < str.length; i++) {
+    result.push(str.charCodeAt(i));
+  }
+  return result;
+}
+
+
 module.exports = {
   addressForAPI,
   b32Encode,
@@ -207,6 +218,7 @@ module.exports = {
   pkRawToB32Address,
   shorPerQuanta,
   string2Bin,
+  stringToBytes,
   testnetNode,
   toBigendianUint64BytesUnsigned,
   toUint8Vector,
