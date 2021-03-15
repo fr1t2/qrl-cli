@@ -1,29 +1,43 @@
 /* global QRLLIB */
 /* eslint new-cap: 0 */
 const { Command, flags } = require('@oclif/command')
-const { white, red } = require('kleur')
+const { white, red, black } = require('kleur')
 const ora = require('ora')
-const fs = require('fs')
+// const fs = require('fs')
 const validateQrlAddress = require('@theqrl/validate-qrl-address')
 const aes256 = require('aes256')
 const { cli } = require('cli-ux')
 const { QRLLIBmodule } = require('qrllib/build/offline-libjsqrl') // eslint-disable-line no-unused-vars
-const CryptoJS = require("crypto-js");
+// const CryptoJS = require("crypto-js");
 const clihelpers = require('../functions/cli-helpers')
 const Qrlnode = require('../functions/grpc')
 
-const openNotarisationFile = (path) => {
-  const contents = fs.readFileSync(path)
-  return contents
-}
+
+// remove all file functions and replace with hash string concatenate for correct message type
+
+
+
+
+
+// const openNotarisationFile = (path) => {
+  // const contents = fs.readFileSync(path)
+  // return contents
+// }
 
 class Notarise extends Command {
   async run() {
     const { args, flags } = this.parse(Notarise)
+    // let dataHash
+    let messageData
+    let messageHex
+    let notarisation = 'AFAFA'
+    let hexseed
+    let address
+    let notarialHash
+
     // network stuff, defaults to mainnet
     let grpcEndpoint = clihelpers.mainnetNode.toString()
     let network = 'Mainnet'
-
     if (flags.grpc) {
       grpcEndpoint = flags.grpc
       network = `Custom GRPC endpoint: [${flags.grpc}]`
@@ -36,28 +50,35 @@ class Notarise extends Command {
       grpcEndpoint = clihelpers.mainnetNode.toString()
       network = 'Mainnet'
     }
-    
     this.log(white().bgBlue(network))
     // the data to notarise here, can be a file submitted (path) or a string passed on cli
     const spinner = ora({ text: 'Notarising Data...\n', }).start()
-    let notarialData
-    let messageData
-    let messageHex
-    let notarisation = 'AFAFA'
+    if (args.dataHash) {
+      const sha256regex = /^\b[A-Fa-f0-9]{64}\b/.test(args.dataHash)
+      // is the passed data the correct length? should be a sha256 sum hash
+      if (args.dataHash.length !== 64 || !sha256regex ) {
+        // either length is wrong or regex not matching
+        spinner.fail(`${black().bgRed(`notarisation data hash invalid...`)}` )
+        this.exti(1)
+      }
+      notarialHash = args.dataHash
 
-    // is it a file?
-    if (fs.existsSync(args.notarialData)) {
-      spinner.succeed(`File found: ${args.notarialData} = ${fs.existsSync(args.notarialData)}`)
+    }
+
+/*
+    // hash a file, only works up to a size dependant on local settings < 2gb
+    if (fs.existsSync(args.dataHash)) {
+      spinner.succeed(`File found: ${args.dataHash} = ${fs.existsSync(args.dataHash)}`)
       // file submitted, is file empty?
-      clihelpers.isFileEmpty(args.notarialData).then( (isEmpty) => {
+      clihelpers.isFileEmpty(args.dataHash).then( (isEmpty) => {
         if (isEmpty) {
           spinner.fail('File is empty...')
           this.exit(1)
         }
       })
       try{
-        notarialData = openNotarisationFile(args.notarialData)
-        notarialData = Buffer.from(openNotarisationFile(args.notarialData), 'hex')
+        dataHash = openNotarisationFile(args.dataHash)
+        dataHash = Buffer.from(openNotarisationFile(args.dataHash), 'hex')
       }
       catch (e) {
         spinner.fail(`Unable to open file: ${e}`)
@@ -69,22 +90,26 @@ class Notarise extends Command {
       this.exit(1)
     }
     // Convert notarial Data to WordArray
-    const resultWordArray = CryptoJS.lib.WordArray.create(notarialData)
+    const resultWordArray = CryptoJS.lib.WordArray.create(dataHash)
     // sha256 hash the file, output hex
     const notarialHash = CryptoJS.SHA256(resultWordArray).toString(CryptoJS.enc.Hex)
-    // add message type for notarisation, (2) and the hash from the file
+    // add message type for notarisation, (2) and the hash from the file   
+*/
+
     notarisation += `2${notarialHash}`
     spinner.succeed(`notarisation: ${notarisation}`)
     // additional data to send with the notary - user defined
+    
     if (flags.message) {
       messageData = flags.message.toString()
       if (messageData.length > 45) {
-        spinner.fail(`Message cannot be longer than 45 characters...`)
+        spinner.fail(`${black().bgRed(`Message cannot be longer than 45 characters.`)} Message Length: ${messageData.length}` )
         this.exit(1)
       }
       spinner.succeed(`Message data recieved: ${messageData}`)
       // Convert string to hex to append to the hash
-      const messageDataBytes = clihelpers.stringToBytes(messageData)
+      const messageDataBytes = Buffer.from(messageData, 'hex')
+
       messageHex = clihelpers.bytesToHex(messageDataBytes)
       // Construct final hex string for notarisation appending message hex
       notarisation += messageHex
@@ -92,12 +117,10 @@ class Notarise extends Command {
     spinner.succeed(`final notarisation hex: ${notarisation}`)
     // get wallet private details for transaction
     if (!flags.wallet && !flags.hexseed) {
-      spinner.fail(`Unable to notarise: no wallet json file or hexseed specified`)
+      spinner.fail(`${black().bgRed(`No wallet.json file (-w) or hexseed (-h) specified...`)}` )
       this.exit(1)
     }
-    // wallet functions
-    let hexseed
-    let address
+
     // open wallet file
     if (flags.wallet) {
       let isValidFile = false
@@ -122,7 +145,7 @@ class Notarise extends Command {
             isValidFile = true
           } 
           else {
-            spinner.fail(`Unable to open wallet file: invalid password`)
+            spinner.fail(`${black().bgRed(`Unable to open wallet file: Invalid password...`)}` )
             this.exit(1)
           }
         }
@@ -131,11 +154,12 @@ class Notarise extends Command {
         isValidFile = false
       }
       if (!isValidFile) {
-        spinner.fail(`Unable to open wallet file: invalid wallet file`)
+        spinner.fail(`${black().bgRed(`Unable to open wallet file: Invalid wallet file...`)}` )
         this.exit(1)
       }
       if (!flags.otsindex ) {
-        spinner.fail(`no OTS index given`)
+        spinner.fail(`${black().bgRed(`No OTS index (-i) given...`)}` )
+        spinner.fail(``)
         this.exit(1)
       }
     }
@@ -147,19 +171,19 @@ class Notarise extends Command {
       if (hexseed.match(' ') === null) {
         // hexseed: correct length?
         if (hexseed.length !== 102) {
-          spinner.fail(`${red('⨉')} Hexseed invalid: too short`)
+          spinner.fail(`${black().bgRed(`Hexseed invalid: too short...`)}` )
           this.exit(1)
         }
       } else {
         // mnemonic: correct number of words?
         // eslint-disable-next-line no-lonely-if
         if (hexseed.split(' ').length !== 34) {
-          spinner.fail(`${red('⨉')} Mnemonic phrase invalid: too short`)
+          spinner.fail(`${black().bgRed(`Mnemonic phrase invalid: too short...`)}` )
           this.exit(1)
         }
       }
       if (!flags.otsindex ) {
-        spinner.fail(`${red('⨉')} no OTS index given`)
+        spinner.fail(`${black().bgRed(`No OTS index (-i) given...`)}` )
         this.exit(1)
       }
     }
@@ -167,7 +191,7 @@ class Notarise extends Command {
     if (flags.otsindex) {
       const passedOts = parseInt(flags.otsindex, 10)
       if (!passedOts && passedOts !== 0) {
-        spinner.fail(`${red('⨉')} OTS key is invalid`)
+        spinner.fail(`${black().bgRed(`OTS key is invalid...`)}` )
         this.exit(1)
       }
     }
@@ -178,7 +202,7 @@ class Notarise extends Command {
       if (passedFee) {
         fee = passedFee
       } else {
-        spinner.fail(`${red('⨉')} Fee is invalid`)
+        spinner.fail(`${black().bgRed(`Fee is invalid...`)}` )
         this.exit(1)
       }
     }
@@ -254,7 +278,7 @@ class Notarise extends Command {
         } else {
           errorMessage = `Node rejected signed message: has OTS key ${flags.otsindex} been reused?`
         }
-        spinner4.fail(`${errorMessage}]`)
+        spinner.fail(`${black().bgRed(`Qrlnetwork.api error: ${response.error_code}`)} ${errorMessage}` )
         this.exit(1)
       }
       const pushTransactionRes = JSON.stringify(response.tx_hash)
@@ -272,7 +296,7 @@ class Notarise extends Command {
         // this.exit(0)
       } 
       else {
-        spinner4.fail(`Node transaction hash ${clihelpers.bytesToHex(txhash.data)} does not match`)
+        spinner.fail(`${black().bgRed(`Node transaction hash ${clihelpers.bytesToHex(txhash.data)} does not match`)}` )
         this.exit(1)
       }
     })
@@ -281,16 +305,16 @@ class Notarise extends Command {
 
 Notarise.description = `Notarise a document or file on the blockchain
 
-Notarise data onto the blockchain. Hashes any given file and submits to the network using any address
-given.
+Notarise data onto the blockchain. Takes a sha256 hash of a file and submits it to the network using
+the wallet address given.
 
 Advanced: you can use a custom defined node to broadcast the notarisation. Use the (-g) grpc endpoint.
 `
 
 Notarise.args = [
    {
-     name: 'notarialData',
-     description: 'Data (file) to notarise',
+     name: 'dataHash',
+     description: 'File sha256 Hash',
      required: true,
    },
  ]
