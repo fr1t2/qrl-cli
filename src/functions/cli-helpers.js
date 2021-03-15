@@ -14,8 +14,8 @@ const shorPerQuanta = 10 ** 9
 // set with grpcEndpoint = clihelpers.testnetNode.toString()
 const mainnetNode = 'mainnet-1.automated.theqrl.org:19009'
 // const mainnetNode = '10.10.10.21:19009'
-const testnetNode = 'testnet-1.automated.theqrl.org:19009'
-// const testnetNode = '10.10.10.21:19010'
+// const testnetNode = 'testnet-1.automated.theqrl.org:19009'
+const testnetNode = '10.10.10.21:19010'
 // const testnetNode = 'devnet-1.automated.theqrl.org:19009' //devner
 
 // qrllib
@@ -159,6 +159,11 @@ const openFile = (path) => {
   return JSON.parse(contents)
 }
 
+const openFilePlain = (path) => {
+  const contents = fs.readFileSync(path)
+  return contents
+}
+
 function byteCount(s) {
     return encodeURI(s).split(/%..|./).length - 1;
 }
@@ -214,6 +219,7 @@ module.exports = {
   isFileEmpty,
   mainnetNode,
   openFile,
+  openFilePlain,
   openWalletFile,
   pkRawToB32Address,
   shorPerQuanta,
