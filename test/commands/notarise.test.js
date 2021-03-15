@@ -7,8 +7,8 @@ const badHashInvalid = 'fc23dfce42391794f9d86fe0e2babfa815bd1846161784fd5f78fdd7
 const sha256Hash = 'fc23dfce42391794f9d86fe0e2babfa815bd1846161784fd5f78fdd774fc0af5'
 const longMessage = 'thismessageistoolobgtosendwithnotarisationandwillbeblockedasitwontfitinsidethemessagedata'
 const messageData = 'Some Additiona Text'
-const walletJSONFile = path.join(__dirname, '../../tmp/test/alice/alice-wallet.json')
-const notAWalletFile = path.join(__dirname, '../../tmp/test/alice/alice.json')
+const walletJSONFile = path.join(__dirname, 'lattice/alice/alice-wallet.json')
+const notAWalletFile = path.join(__dirname, 'lattice/alice/alice.json')
 const hexString = '0004003a2ebbbbe4adfca4b236a0bf91604438e5b09a35d660c7b77343ca8f1e983e115c5166aab75d4dcab819148b5e065aea'
 // const walletFIle = ''
 
