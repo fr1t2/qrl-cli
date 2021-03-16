@@ -73,7 +73,7 @@ describe('get bob lattice keys to file', () => {
 })
 */
 
-/*
+
 // generate-shared-keys command without any flags
 describe('generate-shared-keys #1', () => {
   const args = [
@@ -852,7 +852,7 @@ describe('generate-shared-keys #2b', () => {
     assert.strictEqual(exitCode, 0)
   })
 })
-*/
+
 // re-generate-shared-keys
 // bob re-generates shared keys for bob using his txID
 describe('re-generate-shared-keys #2c', () => {
