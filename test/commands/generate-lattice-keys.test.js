@@ -1,5 +1,12 @@
 const assert = require('assert')
 const {spawn} = require('child_process')
+const path = require('path');
+
+const aliceWalletLocation = path.join(__dirname, 'lattice/alice/alice-wallet.json')
+const aliceLatticeLocation = path.join(__dirname, 'lattice/alice/alice-lattice.json')
+
+const bobWalletLocation = path.join(__dirname, 'lattice/bob/bob-wallet.json')
+const bobLatticeLocation = path.join(__dirname, 'lattice/bob/bob-lattice.json')
 
 const processFlags = {
   detached: true,
@@ -256,7 +263,7 @@ describe('generate-lattice-keys #10', () => {
   const args = [
     'generate-lattice-keys',
     '-i',
-    '0',
+    '20',
     '-w',
     '/tmp/wallet.json',
     '-c',
@@ -283,7 +290,7 @@ describe('generate-lattice-keys #11', () => {
   const args = [
     'generate-lattice-keys',
     '-i',
-    '1',
+    '21',
     '-w',
     '/tmp/wallet.json',
     '-c',
@@ -312,7 +319,7 @@ describe('generate-lattice-keys #12', () => {
   const args = [
     'generate-lattice-keys',
     '-i',
-    '2',
+    '22',
     '-w',
     '/tmp/wallet.json',
     '-t',
@@ -338,7 +345,7 @@ describe('generate-lattice-keys #13', () => {
   const args = [
     'generate-lattice-keys',
     '-i',
-    '3',
+    '23',
     '-w',
     '/tmp/wallet.json',
     '-t',
@@ -364,7 +371,7 @@ describe('generate-lattice-keys #14', () => {
   const args = [
     'generate-lattice-keys',
     '-i',
-    '4',
+    '24',
     '-w',
     '/tmp/wallet.json',
     '-t',
@@ -386,6 +393,62 @@ describe('generate-lattice-keys #14', () => {
     assert.strictEqual(exitCode, 0)
   })
 })
+
+// broadcast keys to testnet network and save crystals file
+describe('generate-lattice-keys #10', () => {
+  const args = [
+    'generate-lattice-keys',
+    '-i',
+    '25',
+    '-w',
+    aliceWalletLocation,
+    '-c',
+    aliceLatticeLocation,
+    '-t',
+    '-b',
+  ]
+
+  let exitCode
+  before(done => {
+    const process = spawn('./bin/run', args, processFlags)
+    process.on('exit', code => {
+      exitCode = code
+      done()
+    })
+  })
+  it('exit code should be 0 with keys broadcast to network and saved into temp file location', () => {
+    assert.strictEqual(exitCode, 0)
+  })
+})
+
+
+// broadcast keys to testnet network and save crystals file
+describe('generate-lattice-keys #10', () => {
+  const args = [
+    'generate-lattice-keys',
+    '-i',
+    '26',
+    '-w',
+    bobWalletLocation,
+    '-c',
+    bobLatticeLocation,
+    '-t',
+    '-b',
+  ]
+
+  let exitCode
+  before(done => {
+    const process = spawn('./bin/run', args, processFlags)
+    process.on('exit', code => {
+      exitCode = code
+      done()
+    })
+  })
+  it('exit code should be 0 with keys broadcast to network and saved into temp file location', () => {
+    assert.strictEqual(exitCode, 0)
+  })
+})
+
 
 /* not failing when ots is reused...
 

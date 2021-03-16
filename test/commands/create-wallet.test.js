@@ -1,5 +1,10 @@
 const assert = require('assert')
 const {spawn} = require('child_process')
+const path = require('path');
+
+const aliceWalletLocation = path.join(__dirname, 'lattice/alice/alice-wallet.json')
+const bobWalletLocation = path.join(__dirname, 'lattice/bob/bob-wallet.json')
+
 
 const processFlags = {
   detached: true,
@@ -254,6 +259,47 @@ describe('create-wallet', () => {
     'create-wallet',
     '-3',
     '-2',
+  ]
+  let exitCode
+  before(done => {
+    const process = spawn('./bin/run', args, processFlags)
+    process.on('exit', code => {
+      exitCode = code
+      done()
+    })
+  })
+  it('exit code should be non-0 if passed with multiple hash selection flags', () => {
+    assert.notStrictEqual(exitCode, 0)
+  })
+})
+
+describe('create-wallet', () => {
+  const args = [
+    'create-wallet',
+    '-3',
+    '-f',
+    aliceWalletLocation,
+  ]
+  let exitCode
+  before(done => {
+    const process = spawn('./bin/run', args, processFlags)
+    process.on('exit', code => {
+      exitCode = code
+      done()
+    })
+  })
+  it('exit code should be non-0 if passed with multiple hash selection flags', () => {
+    assert.notStrictEqual(exitCode, 0)
+  })
+})
+
+
+describe('create-wallet', () => {
+  const args = [
+    'create-wallet',
+    '-3',
+    '-f',
+    bobWalletLocation,
   ]
   let exitCode
   before(done => {
