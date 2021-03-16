@@ -11,7 +11,7 @@ const processFlags = {
   stdio: 'inherit',
 }
 
-describe('create-wallet', () => {
+describe('create-wallet #1', () => {
   const args = [
     'create-wallet',
   ]
@@ -28,7 +28,7 @@ describe('create-wallet', () => {
   })
 })
 
-describe('create-wallet', () => {
+describe('create-wallet #2', () => {
   const args = [
     'create-wallet',
     '-f',
@@ -47,7 +47,7 @@ describe('create-wallet', () => {
   })
 })
 
-describe('create-wallet', () => {
+describe('create-wallet #3', () => {
   const args = [
     'create-wallet',
     '-f',
@@ -65,7 +65,7 @@ describe('create-wallet', () => {
   })
 })
 
-describe('create-wallet', () => {
+describe('create-wallet #4', () => {
   const args = [
     'create-wallet',
     '-f',
@@ -85,7 +85,7 @@ describe('create-wallet', () => {
   })
 })
 
-describe('create-wallet', () => {
+describe('create-wallet #5', () => {
   const args = [
     'create-wallet',
     '-f',
@@ -106,7 +106,7 @@ describe('create-wallet', () => {
   })
 })
 
-describe('create-wallet', () => {
+describe('create-wallet #6', () => {
   const args = [
     'create-wallet',
     '-h',
@@ -124,7 +124,7 @@ describe('create-wallet', () => {
   })
 })
 
-describe('create-wallet', () => {
+describe('create-wallet #7', () => {
   const args = [
     'create-wallet',
     '-h',
@@ -143,7 +143,7 @@ describe('create-wallet', () => {
   })
 })
 
-describe('create-wallet', () => {
+describe('create-wallet #8', () => {
   const args = [
     'create-wallet',
     '-h',
@@ -162,7 +162,7 @@ describe('create-wallet', () => {
   })
 })
 
-describe('create-wallet', () => {
+describe('create-wallet #9', () => {
   const args = [
     'create-wallet',
     '-h',
@@ -181,7 +181,7 @@ describe('create-wallet', () => {
   })
 })
 
-describe('create-wallet', () => {
+describe('create-wallet #10', () => {
   const args = [
     'create-wallet',
     '-h',
@@ -200,7 +200,7 @@ describe('create-wallet', () => {
   })
 })
 
-describe('create-wallet', () => {
+describe('create-wallet #11', () => {
   const args = [
     'create-wallet',
     '-1',
@@ -218,7 +218,7 @@ describe('create-wallet', () => {
   })
 })
 
-describe('create-wallet', () => {
+describe('create-wallet #12', () => {
   const args = [
     'create-wallet',
     '-2',
@@ -236,7 +236,7 @@ describe('create-wallet', () => {
   })
 })
 
-describe('create-wallet', () => {
+describe('create-wallet #13', () => {
   const args = [
     'create-wallet',
     '-3',
@@ -254,7 +254,7 @@ describe('create-wallet', () => {
   })
 })
 
-describe('create-wallet', () => {
+describe('create-wallet #14', () => {
   const args = [
     'create-wallet',
     '-3',
@@ -273,7 +273,7 @@ describe('create-wallet', () => {
   })
 })
 
-describe('create-wallet', () => {
+describe('create-wallet #15 alice', () => {
   const args = [
     'create-wallet',
     '-3',
@@ -289,12 +289,12 @@ describe('create-wallet', () => {
     })
   })
   it('exit code should be non-0 if passed with multiple hash selection flags', () => {
-    assert.notStrictEqual(exitCode, 0)
+    assert.strictEqual(exitCode, 0)
   })
 })
 
 
-describe('create-wallet', () => {
+describe('create-wallet #16 bob', () => {
   const args = [
     'create-wallet',
     '-3',
@@ -310,6 +310,6 @@ describe('create-wallet', () => {
     })
   })
   it('exit code should be non-0 if passed with multiple hash selection flags', () => {
-    assert.notStrictEqual(exitCode, 0)
+    assert.strictEqual(exitCode, 0)
   })
 })
