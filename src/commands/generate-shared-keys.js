@@ -8,7 +8,7 @@
 // CONST AND FUNCTIONS  
 // ///////////////////////// 
 const { Command, flags } = require('@oclif/command')
-// const { red, white } = require('kleur')
+const { white, black } = require('kleur')
 const ora = require('ora')
 const fs = require('fs')
 const aes256 = require('aes256')
@@ -38,17 +38,6 @@ const openEphemeralFile = function oEF(path) {
 const checkCipherTextJson = (checkCipher) => {
   const valid = {}
   valid.status = true
-  if (checkCipher === undefined) {
-    valid.status = false
-    valid.error = 'array is undefined'
-    return valid
-  }
-  const arrayLength = Object.keys(checkCipher).length
-  if (arrayLength === 0) {
-    valid.status = false
-    valid.error = 'length of array is 0'
-    return valid
-  }
   // check that the json has keys as expected 
   if (!JSON.stringify(checkCipher).includes('iv')) {
     valid.status = false
@@ -81,12 +70,6 @@ const checkSignedMessageJson = (signedMessage) => {
     valid.error = 'array is undefined'
     return valid
   }
-  const arrayLength = Object.keys(signedMessage).length
-  if (arrayLength === 0) {
-    valid.status = false
-    valid.error = 'length of array is 0'
-    return valid
-  }
   // check that the json has one key and its 5466 characters
   if (signedMessage.length !== 5466) {
     valid.status = false
@@ -99,21 +82,26 @@ const checkLatticeJSON = (check) => {
   const valid = {}
   valid.status = true
 
-  if (check === undefined) {
-    valid.status = false
-    valid.error = 'array is undefined'
-    return valid
-  }
   const arrayLength = Object.keys(check).length
-  if (arrayLength === 0) {
-    valid.status = false
-    valid.error = 'length of array is 0'
-    return valid
-  }
   // is it a secret key? Array length of 1 (0)
   if (arrayLength === 1) {
     check.forEach((element, index) => {
       // check that the json has keys for kyber, dilithium, and ECDSA SK's 
+      if (!JSON.stringify(element).includes('encrypted')) {
+        valid.status = false
+        valid.error = `Output #${index} does not have a "encrypted" key`
+        return valid
+      }
+      if (!JSON.stringify(element).includes('tx_hash')) {
+        valid.status = false
+        valid.error = `Output #${index} does not have a "tx_hash" key`
+        return valid
+      }
+      if (!JSON.stringify(element).includes('network')) {
+        valid.status = false
+        valid.error = `Output #${index} does not have a "tx_hash" key`
+        return valid
+      }
       if (!JSON.stringify(element).includes('kyberPK')) {
         valid.status = false
         valid.error = `Output #${index} does not have a kyberPK key`
@@ -149,27 +137,37 @@ const checkLatticeJSON = (check) => {
     return valid
   }
   // is it a PUB key element? Array has 2 elements minimum ([0], [1])
-  if (arrayLength >= 1) {
+  if (arrayLength >= 2) {
     for (let i = 1; i < arrayLength; i++) { // eslint-disable-line
       // check that the json has keys for kyber, dilithium, and ECDSA SK's 
-        if (!JSON.stringify(check[i]).includes('pk1')) {
+        if (!JSON.stringify(check[1]).includes('pk1')) {
           valid.status = false
-          valid.error = `Output #${i} does not have a pk1 (kyberPK) key`
+          valid.error = `Output #${1} does not have a pk1 (kyberPK) key`
           return valid
         }
-        if (!JSON.stringify(check[i]).includes('pk2')) {
+        if (!JSON.stringify(check[1]).includes('pk2')) {
           valid.status = false
-          valid.error = `Output #${i} does not have a pk2 (dilithiumPK) key`
+          valid.error = `Output #${1} does not have a pk2 (dilithiumPK) key`
           return valid
         }
-        if (!JSON.stringify(check[i]).includes('pk3')) {
+        if (!JSON.stringify(check[1]).includes('pk3')) {
           valid.status = false
-          valid.error = `Output #${i} does not have a pk (ecdsaPK) key`
+          valid.error = `Output #${1} does not have a pk (ecdsaPK) key`
           return valid
         }     
-        if (!JSON.stringify(check[i]).includes('txHash')) {
+        if (!JSON.stringify(check[1]).includes('txHash')) {
           valid.status = false
-          valid.error = `Output #${i} does not have a txHash`
+          valid.error = `Output #${1} does not have a txHash`
+          return valid
+        }
+        if (!JSON.stringify(check[0]).includes('address')) {
+          valid.status = false
+          valid.error = `Output #${0} does not have a address`
+          return valid
+        }
+        if (!JSON.stringify(check[0]).includes('network')) {
+          valid.status = false
+          valid.error = `Output #${0} does not have a network`
           return valid
         }
       return valid
@@ -233,7 +231,7 @@ class LatticeShared extends Command {
         // file submitted, is file empty?
         clihelpers.isFileEmpty(args.latticeSK).then( (isEmpty) => {
           if (isEmpty) {
-            spinner.fail('Ciphertext File is empty...')
+            spinner.fail(`${black().bgRed(`Ciphertext File is empty...`)}`)
             this.exit(1)
           }
         })
@@ -241,7 +239,7 @@ class LatticeShared extends Command {
           latticeSK = clihelpers.openFile(args.latticeSK)
         }
         catch (e) {
-          spinner.fail('Unable to open file...')
+          spinner.fail(`${black().bgRed(`Unable to open file:`)} ${e}`)
           this.exit(1)
         }
 
@@ -264,13 +262,13 @@ class LatticeShared extends Command {
             latticeSK[0].ecdsaPK = aes256.decrypt(password, latticeSK[0].ecdsaPK)
             latticeSK[0].ecdsaSK = aes256.decrypt(password, latticeSK[0].ecdsaSK)
             if (!latticeSK[0].network.match(/^(Testnet|Mainnet|GRPC)$/)) {
-              spinner.fail('Data still encrypted... Bad passphrase?')
+              spinner.fail(`${black().bgRed(`Data still encrypted:`)} Bad passphrase?`)
               this.exit(1)
             } 
           }
         }
         catch (error) {
-          spinner.fail(`Failed to decrypt: ${error}`)
+          spinner.fail(`${black().bgRed(`Failed to decrypt:`)} ${error}`)
           this.exit(1)
         }
       }
@@ -281,7 +279,7 @@ class LatticeShared extends Command {
           latticeSK = JSON.parse(args.latticeSK)
         }
         catch (e) {
-          spinner.fail('Invalid JSON given...')
+          spinner.fail(`${black().bgRed(`Invalid Lattice keys given:`)} ${e}`)
           this.exit(1)
         }
         if (latticeSK[0].encrypted === true) {
@@ -305,7 +303,7 @@ class LatticeShared extends Command {
           latticeSK[0].ecdsaPK = aes256.decrypt(decryptPassword, latticeSK[0].ecdsaPK)
           latticeSK[0].ecdsaSK = aes256.decrypt(decryptPassword, latticeSK[0].ecdsaSK)
           if (!latticeSK[0].network.match(/^(Testnet|Mainnet|GRPC)$/)) {
-            spinner.fail('Data still encrypted... Bad passphrase?')
+            spinner.fail(`${black().bgRed(`Data still encrypted:`)} Bad passphrase?`)
             this.exit(1)
           } 
         }
@@ -314,7 +312,7 @@ class LatticeShared extends Command {
       validSecretJson = checkLatticeJSON(latticeSK)
       if (!validSecretJson.status) {
         // not valid, fail
-        spinner.fail(`Invalid JSON found in secret keys... ${validSecretJson.error}`)
+        spinner.fail(`${black().bgRed(`Invalid JSON found in secret keys:`)} ${validSecretJson.error}`)
         this.exit(1)
       }
     }
@@ -349,19 +347,19 @@ class LatticeShared extends Command {
         // is a hexseed
         else if (args.latticePK.length === 64) {
           // fetch the transaction from the network
-          spinner.succeed(`Grabbing public keys from ${network}`)
+          spinner.succeed(`Grabbing public keys from ${white().bgBlue(network)}`)
           const response = await Qrlnetwork.api('GetObject', {
             query: Buffer.from(args.latticePK, 'hex')
           })
           if (response.found === false) {
-            spinner.fail('Unable to find transaction...')
+            spinner.fail(`${black().bgRed(`Unable to find transaction...`)}`)
             this.exit(1)
           } 
           else {
             // check that the response contains lattice keys
             if (!response.transaction.tx.latticePK) {
               // not a lattice transaction. Fail
-              spinner.fail('No lattice transaction found...')
+              spinner.fail(`${black().bgRed(`No lattice transaction found...`)}`)
               this.exit(1)
             }
             pubKeyAddress = `Q${clihelpers.bytesToHex(response.transaction.addr_from)}`
@@ -383,14 +381,14 @@ class LatticeShared extends Command {
             latticePK = JSON.parse(args.latticePK)
           } 
           catch (e) {
-            spinner.fail('not valid json or json file given...')
+            spinner.fail(`${black().bgRed(`not valid json or json file given:`)} ${e}`)
             this.exit(1)
           }
         }
         // is the json valid?
           validPublicJson = checkLatticeJSON(latticePK)
         if (!validPublicJson.status) {
-          spinner.fail(`Invalid JSON found in public keys... ${validPublicJson.error}`)
+          spinner.fail(`${black().bgRed(`Invalid JSON found in public keys:`)} ${validPublicJson.error}`)
         this.exit(1)
       }
     }
@@ -485,7 +483,7 @@ class LatticeShared extends Command {
       let encCypherText
 
       if (!args.signedMessage || !args.cypherText) {
-        spinner.fail('Both Shared Secret and Shared Keys are required...')
+        spinner.fail(`${black().bgRed(`Both Shared Secret and Shared Keys are required...`)}`)
         this.exit(1)
       }
 
@@ -495,7 +493,7 @@ class LatticeShared extends Command {
 // spinner.succeed('is the file empty? ')
         clihelpers.isFileEmpty(args.cypherText).then( (isEmpty) => {
           if (isEmpty) {
-            spinner.fail('Ciphertext File is empty...')
+            spinner.fail(`${black().bgRed(`Ciphertext File is empty...`)}`)
             this.exit(1)
           }
         })
@@ -503,7 +501,7 @@ class LatticeShared extends Command {
         // check for valid json here
         validCypherTextJson = await checkCipherTextJson(encCypherTextJson)
         if (!validCypherTextJson.status) {
-          spinner.fail(`Invalid JSON found in encCipherTextJson... ${validCypherTextJson.error}`)
+          spinner.fail(`${black().bgRed(`Invalid JSON found in encCipherTextJson:`)} ${validCypherTextJson.error}`)
           this.exit(1)
         }
       }
@@ -513,23 +511,21 @@ class LatticeShared extends Command {
           encCypherTextJson = JSON.parse(args.cypherText)
         }
         catch (e) {
-          spinner.fail('No valid cyphertext JSON data passed...')
+          spinner.fail(`${black().bgRed(`No valid cyphertext JSON data passed...`)}`)
           this.exit(1)
         }
         validCypherTextJson = await checkCipherTextJson(encCypherTextJson)
         if (!validCypherTextJson.status) {
-          spinner.fail(`Invalid JSON found in encCipherTextJson... ${validCypherTextJson.error}`)
+          spinner.fail(`${black().bgRed(`Invalid JSON found in encCipherTextJson:`)} ${validCypherTextJson.error}`)
           this.exit(1)
         }
       }
-
-
       // is signedMessage a file?
       if (fs.existsSync(args.signedMessage)) {
         // is file empty?
         clihelpers.isFileEmpty(args.signedMessage).then( (isEmpty) => {
           if (isEmpty) {
-            spinner.fail('signedMessage File is empty...')
+            spinner.fail(`${black().bgRed('signedMessage File is empty...')}`)
             this.exit(1)
           }
         })
@@ -537,21 +533,22 @@ class LatticeShared extends Command {
         // check for valid json here
         validSignedMessageJson = await checkSignedMessageJson(signedMsgJson)
         if (!validSignedMessageJson.status) {
-          spinner.fail(`Invalid JSON found in Signed Message JSON... ${validSignedMessageJson.error}`)
+          spinner.fail(`${black().bgRed(`Invalid JSON found in Signed Message file JSON:`)} ${validSignedMessageJson.error}`)          
           this.exit(1)
         }
       }
       else {
+        // signed message is not file, is it json?
         try {
           signedMsgJson = JSON.parse(args.signedMessage)
         }
         catch (e) {
-          spinner.fail('invalid signed message json...')
+          spinner.fail(`${black().bgRed(`invalid signed message json:`)} ${e}`)
         }
         // check for valid json here
         validSignedMessageJson = await checkSignedMessageJson(signedMsgJson[0])
         if (!validSignedMessageJson.status) {
-          spinner.fail(`Invalid JSON found in Signed Message JSON... ${validSignedMessageJson.error}`)
+          spinner.fail(`${black().bgRed(`Invalid JSON found in Signed Message JSON:`)} ${validSignedMessageJson.error}`)
           this.exit(1)
         }
       }
@@ -566,7 +563,7 @@ class LatticeShared extends Command {
             signedMsg = signedMsgJson
           } 
           catch (error) {
-          	spinner.fail('cant open files...')
+            spinner.fail(`${black().bgRed(`cant open file:`)} ${error}`)
             this.exit(1)
           }
           // 1 - verify p signature using Alice's dilithium public key 
@@ -616,7 +613,7 @@ Generate new shared_keys and shared_keylist from transaction hash and private la
     - shared_key encrypted secret
     - key_list from secret, through shake128 (optional password protected)
 
-Re-generate shared_keys from encrypted secrets
+Re-generate shared_keys from encrypted secrets, {cyphertext, signedMessage}
   Generates:
     - Decrypted shared key
     - Decrypted cyphertext (shared_secret)

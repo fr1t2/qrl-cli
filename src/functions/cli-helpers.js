@@ -17,6 +17,8 @@ const mainnetNode = 'mainnet-1.automated.theqrl.org:19009'
 const testnetNode = 'testnet-1.automated.theqrl.org:19009'
 // const testnetNode = '10.10.10.21:19010'
 
+// const testnetNode = 'devnet-1.automated.theqrl.org:19009' //devnet
+
 // qrllib
 let DILLIBLoaded = false
 
@@ -158,6 +160,11 @@ const openFile = (path) => {
   return JSON.parse(contents)
 }
 
+const openFilePlain = (path) => {
+  const contents = fs.readFileSync(path)
+  return contents
+}
+
 function byteCount(s) {
     return encodeURI(s).split(/%..|./).length - 1;
 }
@@ -193,6 +200,16 @@ function isFileEmpty(fileName, ignoreWhitespace=true) {
   })
 }
 
+function stringToBytes(str) {
+  const result = [];
+  /* eslint no-plusplus: ["error", { "allowForLoopAfterthoughts": true }] */
+  for (let i = 0; i < str.length; i++) {
+    result.push(str.charCodeAt(i));
+  }
+  return result;
+}
+
+
 module.exports = {
   addressForAPI,
   b32Encode,
@@ -203,10 +220,12 @@ module.exports = {
   isFileEmpty,
   mainnetNode,
   openFile,
+  openFilePlain,
   openWalletFile,
   pkRawToB32Address,
   shorPerQuanta,
   string2Bin,
+  stringToBytes,
   testnetNode,
   toBigendianUint64BytesUnsigned,
   toUint8Vector,
