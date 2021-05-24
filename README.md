@@ -37,6 +37,7 @@ USAGE
 * [`qrl-cli generate-shared-keys LATTICEPK LATTICESK [CYPHERTEXT] [SIGNEDMESSAGE]`](#qrl-cli-generate-shared-keys-latticepk-latticesk-cyphertext-signedmessage)
 * [`qrl-cli get-keys`](#qrl-cli-get-keys)
 * [`qrl-cli help [COMMAND]`](#qrl-cli-help-command)
+* [`qrl-cli notarise NOTARIALDATA`](#qrl-cli-notarise-notarialdata)
 * [`qrl-cli ots ADDRESS`](#qrl-cli-ots-address)
 * [`qrl-cli receive ADDRESS`](#qrl-cli-receive-address)
 * [`qrl-cli search SEARCH`](#qrl-cli-search-search)
@@ -225,6 +226,40 @@ OPTIONS
 ```
 
 _See code: [@oclif/plugin-help](https://github.com/oclif/plugin-help/blob/v2.2.3/src/commands/help.ts)_
+
+## `qrl-cli notarise NOTARIALDATA`
+
+Send up to 80 byte message on the network
+
+```
+USAGE
+  $ qrl-cli notarise NOTARIALDATA
+
+ARGUMENTS
+  NOTARIALDATA  Data to notarise
+
+OPTIONS
+  -1, --sha2256            (default) Use SHA2-256 hashing mechanism
+  -2, --shake128           Use SHAKE-128 hashing mechanism
+  -3, --shake256           Use SHAKE-256 hashing mechanism
+  -M, --message=message    Additional Message data to send (max 45 char)
+  -f, --fee=fee            QRL (f)ee for transaction in Shor (defaults to 100 Shor)
+  -g, --grpc=grpc          advanced: grpc endpoint (for devnet/custom QRL network deployments)
+  -i, --otsindex=otsindex  Unused OTS key (i)ndex for message transaction
+  -m, --mainnet            queries mainnet for the OTS state
+  -p, --password=password  Encrypted QRL wallet file (p)assword
+  -s, --hexseed=hexseed    Secret hex(s)eed/mnemonic of address message should be sent from
+  -t, --testnet            queries testnet for the OTS state
+  -w, --wallet=wallet      JSON (w)allet file message will be sent from
+
+DESCRIPTION
+  Message can be sent to a recipient with the (-r) flag
+  You can select either (-m) mainnet or (-t) testnet
+
+  Advanced: you can use a custom defined node to query for status. Use the (-g) grpc endpoint.
+```
+
+_See code: [src/commands/notarise.js](https://github.com/theqrl/qrl-cli/blob/v1.8.0/src/commands/notarise.js)_
 
 ## `qrl-cli ots ADDRESS`
 
